@@ -19,7 +19,7 @@ jobs:
 
     - name: Minify JSON files
       run: |
-        for file in $(find . -type f -name '*.json'); do
+        for file in $(find . -type f -name '*.json' | grep -v '\.min\.json'); do
           echo "$file"
           json-minify "$file" > "${file%.json}.min.json"
         done
