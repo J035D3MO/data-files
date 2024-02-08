@@ -20,8 +20,8 @@ jobs:
     - name: Minify JSON files
       run: |
         for file in $(find . -type f -name '*.json' | grep -v '\.min\.json'); do
-          echo "$file"
-          json-minify "$file" > "${file%.json}.min.json"
+            echo "Processing: $file"
+            json-minify "$file" > "${file%.json}.min.json"
         done
 
     - name: Commit and push changes
