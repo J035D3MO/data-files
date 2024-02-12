@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  Minify:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: npm install -g json-minify
+
+    - name: Minify JSON files
+      run: |
+        for file in $(find . -type f -name '*.json' | grep -v '\.min\.json'); do
+            echo "Processing: $file"
+            json-minify "$file" > "${file%.json}.min.json"
+        done
+
+    - name: Copy to public
+      run: |
+        cp . public -r
+        rm public/.github -r
+
+    Manifest:
+        name: Gen Manifest
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v2
+      
+          - name: Get Date
+            id: t1
+            uses: Kaven-Universe/github-action-current-date-time@v1
+      
+          - name: Create manifest file
+            uses: jsdaniell/create-json@master
+            with:
+              name: "manifest.json"
+              json: "{\"version\": \"${{ github.head_ref }}.${{ github.sha }}\", \"updated\": \"${{ steps.t1.outputs.day }}-${{ steps.t1.outputs.month }}-${{ steps.t1.outputs.year }} ${{ steps.t1.outputs.hours }}:${{ steps.t1.outputs.minutes }}\"}"
+              dir: "public/"
+
+  Deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Deploy to Netlify
+        uses: cchitsiang/netlify-deploy-action@main
+        with:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_DEPLOY_MESSAGE: "Prod deploy ${{ github.ref }}"
+          NETLIFY_DEPLOY_TO_PROD: true
+          build_directory: 'public'
+          install_command: "echo Skipping installing the dependencies"
+          build_command: "echo Skipping building the web files"
