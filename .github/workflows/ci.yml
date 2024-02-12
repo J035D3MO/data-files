@@ -30,7 +30,7 @@ jobs:
         cp . public -r
         rm public/.github -r
 
-    genmanifest:
+  genmanifest:
         name: Gen Manifest
         runs-on: ubuntu-latest
 
